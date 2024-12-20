@@ -81,6 +81,7 @@ def modify_column_data(data):
                     matching_indice_montant_pret.append(index)  # Affiche chaque entrée
   
             if not matching_indice_montant_pret:
+                print('not matching_indice_montant_pret')
                 row['Montant_pret']=0
             else: 
                 montant_pert_total=0
@@ -121,6 +122,8 @@ def modify_column_data(data):
             # ]
             
             matching_indice_Appele_Non_verse=[]  
+            print('matching_indice_Appele_Non_verse here')
+            print(entries)
             for index, entry in enumerate(entries):
                 if entry=="CURACCOUNT" or entry=="CURACCOUNT-20241123" or entry=="CURACCOUNT-20241124" or entry=="CURACCOUNT-20241125" or entry=="CURACCOUNT-20241126" or entry=="CURACCOUNT-20241127" or entry=="CURACCOUNT-20241128" or entry=="CURACCOUNT-20241129": 
                     matching_indice_Appele_Non_verse.append(index)  
@@ -195,6 +198,8 @@ def modify_column_data(data):
                     matching_indice_Non_appele_verse.append(index)  # Ajouter l'indice de l'entrée au resultats 
             if not matching_indice_Non_appele_verse:
                 row['Capital_Appele_Non_verse']=0
+            elif row['Nombre_de_jour_retard'] == 0:
+                row['Capital_Appele_Non_verse'] = 0
             else:    
                 montant_pert_total=0 
                 for index in matching_indice_Non_appele_verse: 
@@ -220,11 +225,14 @@ def modify_column_data(data):
                 # print (f"Capital_Appele_Non_verse:{value}")
                 row['Capital_Appele_Non_verse'] = value    
             
-            if row['Nombre_de_jour_retard']==0:
-                print('pas de retard: j=0')
-                print(row['Nombre_de_jour_retard'])
-                print(row['Capital_Appele_Non_verse'])
-                exit()
+            # test breack point
+            # if row['Nombre_de_jour_retard']==0 and (row['Numero_pret'] != 'AA243284V8MC' and row['Numero_pret'] != 'AA24332TCNWV' and row['Numero_pret'] != 'AA24334SRQ3M'  ):
+            #     print('pas de retard: j=0')
+            #     print(row)
+            #     print(row['Nombre_de_jour_retard'])
+            #     print(row['Capital_Non_appele_ech'])
+            #     print(row['Capital_Appele_Non_verse'])
+            #     exit()
 
             # TERME A POUT TOTAL ACCOUT
             valeur_retard = row.get('Nombre_de_jour_retard', '')
@@ -255,6 +263,16 @@ def modify_column_data(data):
         capital_appele =row['Capital_Appele_Non_verse']
         capital_non_appele = row['Capital_Non_appele_ech']
         row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
+        
+        # test breack point
+        if  (row['Numero_pret'] == 'AA24328JJDBH' ):
+            print(row)
+            print(row['Nombre_de_jour_retard'])
+            print(row['Capital_Non_appele_ech'])
+            print(row['Capital_Appele_Non_verse'])
+            exit()
+        else:
+            pass
     return data
 
 def data_base_query(offset):
@@ -272,7 +290,7 @@ def data_base_query(offset):
             '' as Montant_pret,
             (SELECT DATEDIFF(maturity_date, base_date)    FROM aa_account_details_mcbc_live_full   WHERE id = arrangement.id LIMIT 1) as Duree_Remboursement,
             (SELECT effective_rate  FROM aa_arr_interest_mcbc_live_full  WHERE id_comp_1 =arrangement.id  and id_comp_2='PRINCIPALINT' LIMIT 1) as taux_d_interet,  
-            (SELECT DATEDIFF('2024-11-30', payment_date)  FROM aa_bill_detail_mcbc_live_full WHERE arrangement_id = arrangement.id LIMIT 1 ) as Nombre_de_jour_retard,
+            (SELECT DATEDIFF('2024-11-30', payment_date)  FROM aa_bill_detail_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
             '' as Statut_du_client,
             '' as Capital_Non_appele_ech,
             '' as Capital_Appele_Non_verse, 
