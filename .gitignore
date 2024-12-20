@@ -1,0 +1,5 @@
+*.xlsx
+/.venv/
+.venv
+/archive_output/output/
+/a rendre
