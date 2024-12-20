@@ -105,6 +105,7 @@ def modify_column_data(data):
                     montant_pert_total+= float(credit_mvmt)
                     montant_pert_total+= float(open_balance) 
                 row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total 
+                # print(row['Montant_pret'])
                 
             # matching_indice_Appele_Non_verse = [
             #     index for index, entry in enumerate(entries) 
@@ -226,13 +227,15 @@ def modify_column_data(data):
                 row['Capital_Appele_Non_verse'] = value    
             
             # test breack point
-            # if row['Nombre_de_jour_retard']==0 and (row['Numero_pret'] != 'AA243284V8MC' and row['Numero_pret'] != 'AA24332TCNWV' and row['Numero_pret'] != 'AA24334SRQ3M'  ):
+            # if (row['Numero_pret'] != 'AA243345BQV4' ):
             #     print('pas de retard: j=0')
             #     print(row)
             #     print(row['Nombre_de_jour_retard'])
             #     print(row['Capital_Non_appele_ech'])
             #     print(row['Capital_Appele_Non_verse'])
             #     exit()
+            # else:
+            #     pass
 
             # TERME A POUT TOTAL ACCOUT
             valeur_retard = row.get('Nombre_de_jour_retard', '')
@@ -264,15 +267,14 @@ def modify_column_data(data):
         capital_non_appele = row['Capital_Non_appele_ech']
         row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
         
-        # test breack point
-        if  (row['Numero_pret'] == 'AA24328JJDBH' ):
-            print(row)
-            print(row['Nombre_de_jour_retard'])
-            print(row['Capital_Non_appele_ech'])
-            print(row['Capital_Appele_Non_verse'])
-            exit()
-        else:
-            pass
+        # if (row['Numero_pret'] != 'AA243345BQV4' ):
+        #     print(row)
+        #     print(row['Nombre_de_jour_retard'])
+        #     print(row['Capital_Non_appele_ech'])
+        #     print(row['Capital_Appele_Non_verse'])
+        #     exit()
+        # else:
+        #     pass
     return data
 
 def data_base_query(offset):
