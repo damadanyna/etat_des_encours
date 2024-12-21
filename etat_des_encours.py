@@ -149,7 +149,10 @@ def modify_column_data(data):
                         if open_balance.strip() == '' or open_balance is None:
                             open_balance = '0.0'  
                     montant_pert_total+= float(open_balance)   
-                row['Capital_Non_appele_ech'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
+                if(row['Date_pret'] == '20241129'):
+                    row['Capital_Non_appele_ech'] = float(open_balance) + float(credit_mvmt) + float(debit_mvmt)
+                else:
+                    row['Capital_Non_appele_ech'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
                 
             # TERME A IGNORERJ  
             # list_date=['20241123','20241124','20241125','20241126','20241127','20241128','20241129']
@@ -224,7 +227,10 @@ def modify_column_data(data):
                     montant_pert_total+= float(open_balance)   
                 value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
                 # print (f"Capital_Appele_Non_verse:{value}")
-                row['Capital_Appele_Non_verse'] = value    
+                if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
+                    row['Capital_Appele_Non_verse'] = float(open_balance)
+                else:
+                    row['Capital_Appele_Non_verse'] = value    
             
             # test breack point
             # if (row['Numero_pret'] != 'AA243345BQV4' ):
@@ -265,7 +271,10 @@ def modify_column_data(data):
              
         capital_appele =row['Capital_Appele_Non_verse']
         capital_non_appele = row['Capital_Non_appele_ech']
-        row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
+        if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
+            row['Total_capital_echus_non_echus'] = row['Capital_Appele_Non_verse']
+        else:
+            row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
         
         # if (row['Numero_pret'] != 'AA243345BQV4' ):
         #     print(row)
