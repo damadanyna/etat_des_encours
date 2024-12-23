@@ -1,5 +1,6 @@
 import pymysql  # Assurez-vous que pymysql est importé correctement
 import pandas as pd
+import os
 
 def connect_to_database(host, user, password, database):
     """Connect to the database and return the connection object."""
@@ -303,7 +304,11 @@ if __name__ == "__main__":
     # SQL query to execute
  
  
-    output_file_template = "output_offset_{offset}.xlsx"
+    output_file_template = "out_put_etat_des_encours/etat_des_encours_offset_{offset}.xlsx"
+    output_directory = os.path.dirname(output_file_template)
+    # Vérifier si le dossier existe, sinon le crée
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
     
     # Connect to the database
     conn = connect_to_database(**db_config) 
