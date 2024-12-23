@@ -60,28 +60,13 @@ def modify_column_data(data):
         curr_asset_type = row['curr_asset_type']
         if input_string or curr_asset_type: 
             entries = input_string.split('|')  
-            entries_curr_asset_type = curr_asset_type.split('|')  
-            
-            # TERME A IGNORER
-            # ignore_terms = ("CURACCOUNT", "DUEACCOUNT", "ACCOUNT-") 
-            # matching_indices = [
-            #     index for index, entry in enumerate(entries) 
-            #     if "ACCOUNT" in entry and not any(term in entry for term in ignore_terms)
-            # ] 
-            # if not matching_indices:
-            #     row['Capital_Appele_Non_verse']=0
-            # else:  
-            #     matching_indices=matching_indices[0]  
-            #     value =float(split_value(row['Capital_Appele_Non_verse'],matching_indices) )
-            #     row['Capital_Appele_Non_verse'] = value * -1 if value < 0 else value 
-            
+            entries_curr_asset_type = curr_asset_type.split('|')    
             matching_indice_montant_pret=[] 
             for index, entry in enumerate(entries):
                 if entry=="TOTCOMMITMENT" or entry=="TOTCOMMITMENT-DATE": 
                     matching_indice_montant_pret.append(index)  # Affiche chaque entrée
   
-            if not matching_indice_montant_pret:
-                print('not matching_indice_montant_pret')
+            if not matching_indice_montant_pret: 
                 row['Montant_pret']=0
             else: 
                 montant_pert_total=0
@@ -104,27 +89,9 @@ def modify_column_data(data):
                     montant_pert_total+= float(debit_mvmt)
                     montant_pert_total+= float(credit_mvmt)
                     montant_pert_total+= float(open_balance) 
-                row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total 
-                # print(row['Montant_pret'])
-                
-            # matching_indice_Appele_Non_verse = [
-            #     index for index, entry in enumerate(entries) 
-            #     if "CURACCOUNT" in entry  
-            # ] 
-            #     entries = [
-            # "CURACCOUNT", 
-            # "CURACCOUNT-20241123", 
-            # "CURACCOUNT-20241124", 
-            # "CURACCOUNT-20241125", 
-            # "CURACCOUNT-20241126", 
-            # "CURACCOUNT-20241127", 
-            # "CURACCOUNT-20241128",
-            # "CURACCOUNT-20241129", 
-            # ]
+                row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
             
-            matching_indice_Appele_Non_verse=[]  
-            print('matching_indice_Appele_Non_verse here')
-            print(entries)
+            matching_indice_Appele_Non_verse=[]   
             for index, entry in enumerate(entries):
                 if entry=="CURACCOUNT" or entry=="CURACCOUNT-20241123" or entry=="CURACCOUNT-20241124" or entry=="CURACCOUNT-20241125" or entry=="CURACCOUNT-20241126" or entry=="CURACCOUNT-20241127" or entry=="CURACCOUNT-20241128" or entry=="CURACCOUNT-20241129": 
                     matching_indice_Appele_Non_verse.append(index)  
@@ -174,9 +141,6 @@ def modify_column_data(data):
                     montant_pert_total+= float(open_balance)    
                 row['Total_interet_echus'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
                     
-            # TERME A POUT TOTAL ACCOUT
-            # ignore_terms_total_iterest_echus = ("ACCPENALTYINT", "SP") 
-                    
             valid_entries = [
                 "CURACCOUNT", 
                 "CURACCOUNT-20241123", 
@@ -189,11 +153,7 @@ def modify_column_data(data):
             ]
 
             # Initialisation de la liste de résultats
-            matching_indice_Non_appele_verse = []
-
-            # Affichage des entrées
-            print(f"entries: {entries}")
-
+            matching_indice_Non_appele_verse = [] 
             # Boucle sur les entrées
             for index, entry in enumerate(entries):
                 if entry in valid_entries:  # Si l'entrée est dans la liste des entrées valides
@@ -225,24 +185,12 @@ def modify_column_data(data):
                     montant_pert_total+= float(debit_mvmt) 
                     montant_pert_total+= float(credit_mvmt) 
                     montant_pert_total+= float(open_balance)   
-                value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
-                # print (f"Capital_Appele_Non_verse:{value}")
+                value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
                 if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
                     row['Capital_Appele_Non_verse'] = float(open_balance)
                 else:
                     row['Capital_Appele_Non_verse'] = value    
-            
-            # test breack point
-            # if (row['Numero_pret'] != 'AA243345BQV4' ):
-            #     print('pas de retard: j=0')
-            #     print(row)
-            #     print(row['Nombre_de_jour_retard'])
-            #     print(row['Capital_Non_appele_ech'])
-            #     print(row['Capital_Appele_Non_verse'])
-            #     exit()
-            # else:
-            #     pass
-
+             
             # TERME A POUT TOTAL ACCOUT
             valeur_retard = row.get('Nombre_de_jour_retard', '')
 
@@ -275,15 +223,7 @@ def modify_column_data(data):
             row['Total_capital_echus_non_echus'] = row['Capital_Appele_Non_verse']
         else:
             row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
-        
-        # if (row['Numero_pret'] != 'AA243345BQV4' ):
-        #     print(row)
-        #     print(row['Nombre_de_jour_retard'])
-        #     print(row['Capital_Non_appele_ech'])
-        #     print(row['Capital_Appele_Non_verse'])
-        #     exit()
-        # else:
-        #     pass
+         
     return data
 
 def data_base_query(offset):
