@@ -258,10 +258,10 @@ def data_base_query(offset):
             (SELECT alt_acct_id FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id LIMIT 1) as Numero_compte,   
             (SELECT settle_status  FROM aa_bill_detail_mcbc_live_full WHERE settle_status = 'UNPAID' LIMIT 1) as settle_status,
             (SELECT curr_asset_type  FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241129') as credit_mvmt_29_nov, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241129') as debit_mvmt_29_nov ,
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as credit_mvmt, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as debit_mvmt, 
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223' LIMIT 1) as credit_mvmt_23_nov, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223' LIMIT 1) as debit_mvmt_23_nov ,
             (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
             (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
         FROM 
