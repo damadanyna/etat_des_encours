@@ -61,13 +61,28 @@ def modify_column_data(data):
         curr_asset_type = row['curr_asset_type']
         if input_string or curr_asset_type: 
             entries = input_string.split('|')  
-            entries_curr_asset_type = curr_asset_type.split('|')    
+            entries_curr_asset_type = curr_asset_type.split('|')  
+            
+            # TERME A IGNORER
+            # ignore_terms = ("CURACCOUNT", "DUEACCOUNT", "ACCOUNT-") 
+            # matching_indices = [
+            #     index for index, entry in enumerate(entries) 
+            #     if "ACCOUNT" in entry and not any(term in entry for term in ignore_terms)
+            # ] 
+            # if not matching_indices:
+            #     row['Capital_Appele_Non_verse']=0
+            # else:  
+            #     matching_indices=matching_indices[0]  
+            #     value =float(split_value(row['Capital_Appele_Non_verse'],matching_indices) )
+            #     row['Capital_Appele_Non_verse'] = value * -1 if value < 0 else value 
+            
             matching_indice_montant_pret=[] 
             for index, entry in enumerate(entries):
                 if entry=="TOTCOMMITMENT" or entry=="TOTCOMMITMENT-DATE": 
                     matching_indice_montant_pret.append(index)  # Affiche chaque entrée
   
-            if not matching_indice_montant_pret: 
+            if not matching_indice_montant_pret:
+                # print('not matching_indice_montant_pret')
                 row['Montant_pret']=0
             else: 
                 montant_pert_total=0
@@ -90,11 +105,29 @@ def modify_column_data(data):
                     montant_pert_total+= float(debit_mvmt)
                     montant_pert_total+= float(credit_mvmt)
                     montant_pert_total+= float(open_balance) 
-                row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
+                row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total 
+                # print(row['Montant_pret'])
+                
+            # matching_indice_Appele_Non_verse = [
+            #     index for index, entry in enumerate(entries) 
+            #     if "CURACCOUNT" in entry  
+            # ] 
+            #     entries = [
+            # "CURACCOUNT", 
+            # "CURACCOUNT-20241123", 
+            # "CURACCOUNT-20241124", 
+            # "CURACCOUNT-20241125", 
+            # "CURACCOUNT-20241126", 
+            # "CURACCOUNT-20241127", 
+            # "CURACCOUNT-20241128",
+            # "CURACCOUNT-20241129", 
+            # ]
             
-            matching_indice_Appele_Non_verse=[]   
+            matching_indice_Appele_Non_verse=[]  
+            # print('matching_indice_Appele_Non_verse here')
+            # print(entries)
             for index, entry in enumerate(entries):
-                if entry=="CURACCOUNT" or entry=="CURACCOUNT-20241123" or entry=="CURACCOUNT-20241124" or entry=="CURACCOUNT-20241125" or entry=="CURACCOUNT-20241126" or entry=="CURACCOUNT-20241127" or entry=="CURACCOUNT-20241128" or entry=="CURACCOUNT-20241129": 
+                if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412"): 
                     matching_indice_Appele_Non_verse.append(index)  
             if not matching_indice_Appele_Non_verse:
                 row['Capital_Non_appele_ech']=0
@@ -142,29 +175,37 @@ def modify_column_data(data):
                     montant_pert_total+= float(open_balance)    
                 row['Total_interet_echus'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
                     
-            valid_entries = [
-                "CURACCOUNT", 
-                "CURACCOUNT-20241123", 
-                "CURACCOUNT-20241124", 
-                "CURACCOUNT-20241125", 
-                "CURACCOUNT-20241126", 
-                "CURACCOUNT-20241127", 
-                "CURACCOUNT-20241128", 
-                "CURACCOUNT-20241129"
-            ]
+            # TERME A POUT TOTAL ACCOUT
+            # ignore_terms_total_iterest_echus = ("ACCPENALTYINT", "SP") 
+                    
+            # valid_entries = [
+            #     "CURACCOUNT", 
+            #     "CURACCOUNT-20241123", 
+            #     "CURACCOUNT-20241124", 
+            #     "CURACCOUNT-20241125", 
+            #     "CURACCOUNT-20241126", 
+            #     "CURACCOUNT-20241127", 
+            #     "CURACCOUNT-20241128", 
+            #     "CURACCOUNT-20241129"
+            # ]
 
             # Initialisation de la liste de résultats
-            matching_indice_Non_appele_verse = [] 
+            matching_indice_Non_appele_verse = []
+
+            # Affichage des entrées
+            # print(f"entries: {entries}")
+
             # Boucle sur les entrées
             for index, entry in enumerate(entries):
-                if entry in valid_entries:  # Si l'entrée est dans la liste des entrées valides
+                if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412"): # Si l'entrée est dans la liste des entrées valides
                     continue  # Passer à l'itération suivante sans rien faire
-                else:  # Afficher l'entrée qui ne correspond pas
-                    matching_indice_Non_appele_verse.append(index)  # Ajouter l'indice de l'entrée au resultats 
+                else:
+                    if "PA1ACCOUNT" in entry or "PA2ACCOUNT" in entry or "PA3ACCOUNT" in entry or "PA4ACCOUNT" in entry:   
+                        matching_indice_Non_appele_verse.append(index)  # Ajouter l'indice de l'entrée au resultats 
             if not matching_indice_Non_appele_verse:
                 row['Capital_Appele_Non_verse']=0
             elif row['Nombre_de_jour_retard'] == 0:
-                row['Capital_Appele_Non_verse'] = 0
+                row['Capital_Appele_Non_verse']=0
             else:    
                 montant_pert_total=0 
                 for index in matching_indice_Non_appele_verse: 
@@ -186,12 +227,24 @@ def modify_column_data(data):
                     montant_pert_total+= float(debit_mvmt) 
                     montant_pert_total+= float(credit_mvmt) 
                     montant_pert_total+= float(open_balance)   
-                value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
+                value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
+                # print (f"Capital_Appele_Non_verse:{value}")
                 if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
                     row['Capital_Appele_Non_verse'] = float(open_balance)
                 else:
                     row['Capital_Appele_Non_verse'] = value    
-             
+                # print(f"Capital appele non verse: {row['Capital_Appele_Non_verse'] }")
+            # test breack point
+            # if (row['Numero_pret'] != 'AA243345BQV4' ):
+            #     print('pas de retard: j=0')
+            #     print(row)
+            #     print(row['Nombre_de_jour_retard'])
+            #     print(row['Capital_Non_appele_ech'])
+            #     print(row['Capital_Appele_Non_verse'])
+            #     exit()
+            # else:
+            #     pass
+
             # TERME A POUT TOTAL ACCOUT
             valeur_retard = row.get('Nombre_de_jour_retard', '')
 
@@ -224,7 +277,15 @@ def modify_column_data(data):
             row['Total_capital_echus_non_echus'] = row['Capital_Appele_Non_verse']
         else:
             row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
-         
+        # print(f"Total capital echus non echus: {row['Total_capital_echus_non_echus'] }")
+        # if (row['Numero_pret'] != 'AA243345BQV4' ):
+        #     print(row)
+        #     print(row['Nombre_de_jour_retard'])
+        #     print(row['Capital_Non_appele_ech'])
+        #     print(row['Capital_Appele_Non_verse'])
+        #     exit()
+        # else:
+        #     pass
     return data
 
 def data_base_query(offset):
@@ -242,7 +303,7 @@ def data_base_query(offset):
             '' as Montant_pret,
             (SELECT DATEDIFF(maturity_date, base_date)    FROM aa_account_details_mcbc_live_full   WHERE id = arrangement.id LIMIT 1) as Duree_Remboursement,
             (SELECT effective_rate  FROM aa_arr_interest_mcbc_live_full  WHERE id_comp_1 =arrangement.id  and id_comp_2='PRINCIPALINT' LIMIT 1) as taux_d_interet,  
-            (SELECT DATEDIFF('2024-11-30', payment_date)  FROM aa_bill_detail_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
+            (SELECT DATEDIFF('2024-12-23', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
             '' as Statut_du_client,
             '' as Capital_Non_appele_ech,
             '' as Capital_Appele_Non_verse, 
@@ -256,19 +317,19 @@ def data_base_query(offset):
             WHERE   FIND_IN_SET(customer.id, REPLACE(arrangement.customer, '|', ',')) LIMIT 1) AS Agent_de_gestion,
             (SELECT collateral_code FROM collateral_right_mcbc_live_full WHERE SUBSTRING(id, 1, LOCATE('.', id) - 1) = arrangement.customer LIMIT 1) as Code_Garantie,
             (SELECT alt_acct_id FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id LIMIT 1) as Numero_compte,   
-            (SELECT settle_status  FROM aa_bill_detail_mcbc_live_full WHERE settle_status = 'UNPAID' LIMIT 1) as settle_status,
+            (SELECT settle_status  FROM aa_bill_details_mcbc_live_full WHERE settle_status = 'UNPAID' LIMIT 1) as settle_status,
             (SELECT curr_asset_type  FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as credit_mvmt, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as debit_mvmt, 
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223' LIMIT 1) as credit_mvmt_23_nov, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223' LIMIT 1) as debit_mvmt_23_nov ,
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223') as credit_mvmt_29_nov, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223') as debit_mvmt_29_nov ,
             (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
             (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
         FROM 
             aa_arrangement_mcbc_live_full AS arrangement 
         WHERE 
             arrangement.product_line = 'LENDING'
-            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH') 
+            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')  
             HAVING settle_status is not null
             LIMIT 200 OFFSET {offset}
         
@@ -295,21 +356,24 @@ def export_to_excel(data, file_name):
 if __name__ == "__main__":
     # Database configuration
     db_config = {
-        "host": "192.168.1.137",      # Replace with your database host
+        "host": "localhost",      # Replace with your database host
         "user": "root",               # Replace with your database username
-        "password": "clvohama",       # Replace with your database password
+        "password": "",       # Replace with your database password
         "database": "dfe"             # Replace with your database name
     }
     
     # SQL query to execute
  
  
-    output_file_template = "out_put_etat_des_encours/etat_des_encours_offset_{offset}.xlsx"
-    output_directory = os.path.dirname(output_file_template)
-    # Vérifier si le dossier existe, sinon le crée
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
-    
+    # output_file_template = "output_offset_{offset}.xlsx"
+    # Define the path template for the output file
+    output_file_template = "./out_put_etat_des_encours/etat_des_encours_offset_{offset}.xlsx"
+
+    # Check if the directory exists, and if not, create it
+    output_dir = os.path.dirname(output_file_template)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # Connect to the database
     conn = connect_to_database(**db_config) 
     if conn:

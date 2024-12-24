@@ -58,7 +58,13 @@ def process_file(file_path, connection):
         with connection.cursor() as cursor:
             cursor.execute(create_table_query)
             print(f"Table '{table_name}' vérifiée ou créée avec succès.")
+            
+            # Vider la table avant l'insertion
+            truncate_table_query = f"TRUNCATE TABLE {table_name};"
+            cursor.execute(truncate_table_query)
+            print(f"Table '{table_name}' vidée avant l'insertion.")
 
+            # Requête SQL d'insertion 
             insert_query = f"""
                 INSERT INTO {table_name} ({', '.join(df.columns)})
                 VALUES ({', '.join(['%s'] * len(df.columns))});
