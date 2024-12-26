@@ -78,7 +78,11 @@ def modify_column_data(data):
             
             matching_indice_montant_pret=[] 
             for index, entry in enumerate(entries):
-                if entry=="TOTCOMMITMENT" or entry=="TOTCOMMITMENT-DATE": 
+                if entry.startswith("TOTCOMMITMENT"): 
+                    print(f"index: {index}")
+                    print(f"debit_mvmt: {split_value(row['debit_mvmt'],index) }")
+                    print(f"credit_mvmt: {split_value(row['credit_mvmt'],index) }")
+                    print(f"open_balance: {split_value(row['open_balance'],index) }")
                     matching_indice_montant_pret.append(index)  # Affiche chaque entrée
   
             if not matching_indice_montant_pret:
@@ -106,6 +110,8 @@ def modify_column_data(data):
                     montant_pert_total+= float(credit_mvmt)
                     montant_pert_total+= float(open_balance) 
                 row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total 
+                
+                print(f" Montant_pret: {row['Montant_pret']}")
                 # print(row['Montant_pret'])
                 
             # matching_indice_Appele_Non_verse = [
@@ -127,8 +133,10 @@ def modify_column_data(data):
             # print('matching_indice_Appele_Non_verse here')
             # print(entries)
             for index, entry in enumerate(entries):
-                if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412"): 
-                    matching_indice_Appele_Non_verse.append(index)  
+                if (entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412")): 
+                    matching_indice_Appele_Non_verse.append(index)
+                elif ( entry.startswith("CURACCOUNT-2024")  and  "TOTCOMMITMENTBL" in entry): 
+                    matching_indice_Appele_Non_verse.append(index) 
             if not matching_indice_Appele_Non_verse:
                 row['Capital_Non_appele_ech']=0
             else:     
@@ -138,29 +146,30 @@ def modify_column_data(data):
                     credit_mvmt=0
                     open_balance=0 
                     if split_value(row['debit_mvmt'],index):
-                        debit_mvmt = split_value(row['debit_mvmt'],index) 
+                        debit_mvmt = split_value(row['debit_mvmt'],index)  
                         if debit_mvmt.strip() == '' or debit_mvmt is None:
-                            debit_mvmt = '0.0' 
+                            debit_mvmt = '0.0'  
                     if split_value(row['credit_mvmt'],index):
-                        credit_mvmt = split_value(row['credit_mvmt'],index)
+                        credit_mvmt = split_value(row['credit_mvmt'],index) 
                         if credit_mvmt.strip() == '' or credit_mvmt is None:
                             credit_mvmt = '0.0' 
                     if split_value(row['open_balance'],index):
                         open_balance = split_value(row['open_balance'],index)
                         if open_balance.strip() == '' or open_balance is None:
                             open_balance = '0.0'  
-                    montant_pert_total+= float(open_balance)   
-                if(row['Date_pret'] == '20241129'):
-                    row['Capital_Non_appele_ech'] = float(open_balance) + float(credit_mvmt) + float(debit_mvmt)
-                else:
-                    row['Capital_Non_appele_ech'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
+                    montant_pert_total+= float(credit_mvmt)  
+                    montant_pert_total+= float(debit_mvmt) 
+                    montant_pert_total+= float(open_balance) 
+                # if(row['Date_pret'] == '20241123'):
+                #     row['Capital_Non_appele_ech'] = montant_pert_total 
+                # else:
+                row['Capital_Non_appele_ech'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
                 
             # TERME A IGNORERJ  
             # list_date=['20241123','20241124','20241125','20241126','20241127','20241128','20241129']
             indices_total_iterest_echus=[]
             for index, entry in enumerate(entries):    
                 if ("PA1PRINCIPALINT" in entry or "PA2PRINCIPALINT" in entry or "PA3PRINCIPALINT" in entry or "PA4PRINCIPALINT" in entry) and "SP" not in entry:  
-                   
                     indices_total_iterest_echus.append(index) 
             if not indices_total_iterest_echus:
                 row['Total_interet_echus']=0
@@ -200,8 +209,11 @@ def modify_column_data(data):
                 if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412"): # Si l'entrée est dans la liste des entrées valides
                     continue  # Passer à l'itération suivante sans rien faire
                 else:
-                    if "PA1ACCOUNT" in entry or "PA2ACCOUNT" in entry or "PA3ACCOUNT" in entry or "PA4ACCOUNT" in entry:   
-                        matching_indice_Non_appele_verse.append(index)  # Ajouter l'indice de l'entrée au resultats 
+                    if entry=="PA1ACCOUNT"  or entry=="PA2ACCOUNT"  or entry=="PA3ACCOUNT"  or entry=="PA4ACCOUNT" :
+                        matching_indice_Non_appele_verse.append(index) 
+                    elif ( entry!="PA1ACCOUNT"  or entry!="PA2ACCOUNT"  or entry!="PA3ACCOUNT"  or entry!="PA4ACCOUNT" ) and entry=="DUEACCOUNT":
+                        matching_indice_Non_appele_verse.append(index) 
+                        
             if not matching_indice_Non_appele_verse:
                 row['Capital_Appele_Non_verse']=0
             elif row['Nombre_de_jour_retard'] == 0:
@@ -216,23 +228,36 @@ def modify_column_data(data):
                         debit_mvmt = split_value(row['debit_mvmt'],index) 
                         if debit_mvmt.strip() == '' or debit_mvmt is None:
                             debit_mvmt = '0.0' 
+                            
+                        # print(f"open_balance: { split_value(row['open_balance'],index) }, index: {index}") 
                     if split_value(row['credit_mvmt'],index):
                         credit_mvmt = split_value(row['credit_mvmt'],index)
                         if credit_mvmt.strip() == '' or credit_mvmt is None:
                             credit_mvmt = '0.0' 
+                        # print(f"credit_mvmt: { split_value(row['credit_mvmt'],index) }, index: {index}")
                     if split_value(row['open_balance'],index):
                         open_balance = split_value(row['open_balance'],index)
                         if open_balance.strip() == '' or open_balance is None:
                             open_balance = '0.0'  
-                    montant_pert_total+= float(debit_mvmt) 
-                    montant_pert_total+= float(credit_mvmt) 
-                    montant_pert_total+= float(open_balance)   
-                value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
-                # print (f"Capital_Appele_Non_verse:{value}")
+                        # print(f"open_balance: { split_value(row['open_balance'],index) }, index: {index}")   
+                #     montant_pert_total+= float(debit_mvmt) 
+                #     montant_pert_total+= float(credit_mvmt) 
+                #     montant_pert_total+= float(open_balance)   
+                 
+                # value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
+                # # print (f"Capital_Appele_Non_verse:{value}")
                 if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
                     row['Capital_Appele_Non_verse'] = float(open_balance)
                 else:
-                    row['Capital_Appele_Non_verse'] = value    
+                    max_value = max(float(open_balance), float(credit_mvmt), float(debit_mvmt))
+                    if max_value == 0:
+                        min_value = min(float(open_balance), float(credit_mvmt), float(debit_mvmt))  
+                        row['Capital_Appele_Non_verse'] =min_value * -1 if min_value < 0 else min_value   
+                        # row['Capital_Appele_Non_verse'] = min_value  
+                    else: 
+                        row['Capital_Appele_Non_verse'] = max_value 
+                row['Capital_Appele_Non_verse'] =row['Capital_Appele_Non_verse']  * -1 if row['Capital_Appele_Non_verse']  < 0 else row['Capital_Appele_Non_verse']   
+                # print(f"montant_pert_total: { montant_pert_total }")  
                 # print(f"Capital appele non verse: {row['Capital_Appele_Non_verse'] }")
             # test breack point
             # if (row['Numero_pret'] != 'AA243345BQV4' ):
@@ -329,14 +354,17 @@ def data_base_query(offset):
             aa_arrangement_mcbc_live_full AS arrangement 
         WHERE 
             arrangement.product_line = 'LENDING'
-            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')  
+            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH') 
+            AND arrangement.linked_appl_id ='20000969417'   
             HAVING settle_status is not null
             LIMIT 200 OFFSET {offset}
         
             """
 
 
-            # AND arrangement.linked_appl_id ='20000303039' 
+            # AND arrangement.linked_appl_id ='20000969417' 
+            # AND arrangement.linked_appl_id ='20000349478' 
+            # AND arrangement.linked_appl_id ='20000968537' 
             # AND arrangement.linked_appl_id ='20000303039'
             # AND arrangement.linked_appl_id ='20000965497'
             # AND arrangement.linked_appl_id ='20001320972'
