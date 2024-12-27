@@ -78,15 +78,10 @@ def modify_column_data(data):
             
             matching_indice_montant_pret=[] 
             for index, entry in enumerate(entries):
-                if entry.startswith("TOTCOMMITMENT"): 
-                    print(f"index: {index}")
-                    print(f"debit_mvmt: {split_value(row['debit_mvmt'],index) }")
-                    print(f"credit_mvmt: {split_value(row['credit_mvmt'],index) }")
-                    print(f"open_balance: {split_value(row['open_balance'],index) }")
+                if entry.startswith("TOTCOMMITMENT"):  
                     matching_indice_montant_pret.append(index)  # Affiche chaque entrée
   
-            if not matching_indice_montant_pret:
-                # print('not matching_indice_montant_pret')
+            if not matching_indice_montant_pret: 
                 row['Montant_pret']=0
             else: 
                 montant_pert_total=0
@@ -110,15 +105,11 @@ def modify_column_data(data):
                     montant_pert_total+= float(credit_mvmt)
                     montant_pert_total+= float(open_balance) 
                 row['Montant_pret'] =  montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total 
-                
-                print(f" Montant_pret: {row['Montant_pret']}")
-                # print(row['Montant_pret'])
+                 
                 
        
             
-            matching_indice_Appele_Non_verse=[]  
-            # print('matching_indice_Appele_Non_verse here')
-            # print(entries)
+            matching_indice_Appele_Non_verse=[]   
             for index, entry in enumerate(entries):
                 if (entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412")): 
                     matching_indice_Appele_Non_verse.append(index)
@@ -170,8 +161,7 @@ def modify_column_data(data):
             # Initialisation de la liste de résultats
             matching_indice_Non_appele_verse = []
 
-            # Affichage des entrées
-            # print(f"entries: {entries}")
+            # Affichage des entrées 
 
             # Boucle sur les entrées
             for index, entry in enumerate(entries):
@@ -197,24 +187,20 @@ def modify_column_data(data):
                         debit_mvmt = split_value(row['debit_mvmt'],index) 
                         if debit_mvmt.strip() == '' or debit_mvmt is None:
                             debit_mvmt = '0.0' 
-                            
-                        # print(f"open_balance: { split_value(row['open_balance'],index) }, index: {index}") 
+                             
                     if split_value(row['credit_mvmt'],index):
                         credit_mvmt = split_value(row['credit_mvmt'],index)
                         if credit_mvmt.strip() == '' or credit_mvmt is None:
-                            credit_mvmt = '0.0' 
-                        # print(f"credit_mvmt: { split_value(row['credit_mvmt'],index) }, index: {index}")
+                            credit_mvmt = '0.0'  
                     if split_value(row['open_balance'],index):
                         open_balance = split_value(row['open_balance'],index)
                         if open_balance.strip() == '' or open_balance is None:
-                            open_balance = '0.0'  
-                        # print(f"open_balance: { split_value(row['open_balance'],index) }, index: {index}")   
+                            open_balance = '0.0'   
                 #     montant_pert_total+= float(debit_mvmt) 
                 #     montant_pert_total+= float(credit_mvmt) 
                 #     montant_pert_total+= float(open_balance)   
                  
                 # value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
-                # # print (f"Capital_Appele_Non_verse:{value}")
                 if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
                     row['Capital_Appele_Non_verse'] = float(open_balance)
                 else:
@@ -225,16 +211,9 @@ def modify_column_data(data):
                         # row['Capital_Appele_Non_verse'] = min_value  
                     else: 
                         row['Capital_Appele_Non_verse'] = max_value 
-                row['Capital_Appele_Non_verse'] =row['Capital_Appele_Non_verse']  * -1 if row['Capital_Appele_Non_verse']  < 0 else row['Capital_Appele_Non_verse']   
-                # print(f"montant_pert_total: { montant_pert_total }")  
-                # print(f"Capital appele non verse: {row['Capital_Appele_Non_verse'] }")
+                row['Capital_Appele_Non_verse'] =row['Capital_Appele_Non_verse']  * -1 if row['Capital_Appele_Non_verse']  < 0 else row['Capital_Appele_Non_verse'] 
             # test breack point
-            # if (row['Numero_pret'] != 'AA243345BQV4' ):
-            #     print('pas de retard: j=0')
-            #     print(row)
-            #     print(row['Nombre_de_jour_retard'])
-            #     print(row['Capital_Non_appele_ech'])
-            #     print(row['Capital_Appele_Non_verse'])
+            # if (row['Numero_pret'] != 'AA243345BQV4' ): 
             #     exit()
             # else:
             #     pass
@@ -270,13 +249,8 @@ def modify_column_data(data):
         if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
             row['Total_capital_echus_non_echus'] = row['Capital_Appele_Non_verse']
         else:
-            row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele 
-        # print(f"Total capital echus non echus: {row['Total_capital_echus_non_echus'] }")
-        # if (row['Numero_pret'] != 'AA243345BQV4' ):
-        #     print(row)
-        #     print(row['Nombre_de_jour_retard'])
-        #     print(row['Capital_Non_appele_ech'])
-        #     print(row['Capital_Appele_Non_verse'])
+            row['Total_capital_echus_non_echus'] = capital_appele + capital_non_appele  
+        # if (row['Numero_pret'] != 'AA243345BQV4' ): 
         #     exit()
         # else:
         #     pass
@@ -297,7 +271,7 @@ def data_base_query(offset):
             '' as Montant_pret,
             (SELECT DATEDIFF(maturity_date, base_date)    FROM aa_account_details_mcbc_live_full   WHERE id = arrangement.id LIMIT 1) as Duree_Remboursement,
             (SELECT effective_rate  FROM aa_arr_interest_mcbc_live_full  WHERE id_comp_1 =arrangement.id  and id_comp_2='PRINCIPALINT' LIMIT 1) as taux_d_interet,  
-            (SELECT DATEDIFF('2024-12-27', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
+            (SELECT DATEDIFF('2024-12-26', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
             '' as Statut_du_client,
             '' as Capital_Non_appele_ech,
             '' as Capital_Appele_Non_verse, 
@@ -315,8 +289,8 @@ def data_base_query(offset):
             (SELECT curr_asset_type  FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
             (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
             (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241227') as credit_mvmt_29_nov, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241227') as debit_mvmt_29_nov ,
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241226') as credit_mvmt_29_nov, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241226') as debit_mvmt_29_nov ,
             (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
             (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
         FROM 
