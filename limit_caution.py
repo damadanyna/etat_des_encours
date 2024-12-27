@@ -48,78 +48,15 @@ def split_value_by_trailing(value, index, default=None):
 
 def modify_column_data(data):
     """Modify the 'contract_balance.open_balance' column to keep only the first value before the pipe (|)."""
-    for row in data:   
-        input_string = row['property'] 
-        if input_string :
-            entries = input_string.split('|')
-            
-            indices_total_iterest_echus=[]
-            for index, entry in enumerate(entries):
-                if entry =="PRINCIPALINT" :
-                    indices_total_iterest_echus.append(index) 
-                if not indices_total_iterest_echus:
-                    row['principal_int']=0
-                else:
-                    montant_principal_int=0
-                    for index in indices_total_iterest_echus:  
-                        or_prop_amount=0
-                        if split_value(row['or_prop_amount'],index):  
-                            or_prop_amount = split_value(row['or_prop_amount'],index)
-                            if or_prop_amount.strip() == '' or or_prop_amount is None:
-                                or_prop_amount = '0.0'  
-                        if split_value(row['os_prop_amount'],index):  
-                            os_prop_amount = split_value(row['os_prop_amount'],index)
-                            if os_prop_amount.strip() == '' or os_prop_amount is None:
-                                os_prop_amount = '0.0'    
-                        montant_principal_int+= float(or_prop_amount)    
-                        montant_principal_int+= float(os_prop_amount)    
-                    row['principal_int'] =montant_principal_int * -1 if montant_principal_int < 0 else montant_principal_int  
-            
-            indices_total_iterest_echus=[]
-            for index, entry in enumerate(entries):
-                if entry =="PENALTYINT" :
-                    indices_total_iterest_echus.append(index) 
-                if not indices_total_iterest_echus:
-                    row['penality_int']=0
-                else:
-                    montant_penality_int=0
-                    for index in indices_total_iterest_echus:  
-                        or_prop_amount=0
-                        if split_value(row['or_prop_amount'],index):  
-                            or_prop_amount = split_value(row['or_prop_amount'],index)
-                            if or_prop_amount.strip() == '' or or_prop_amount is None:
-                                or_prop_amount = '0.0'  
-                        if split_value(row['os_prop_amount'],index):  
-                            os_prop_amount = split_value(row['os_prop_amount'],index)
-                            if os_prop_amount.strip() == '' or os_prop_amount is None:
-                                os_prop_amount = '0.0'    
-                        montant_penality_int+= float(or_prop_amount)    
-                        montant_penality_int+= float(os_prop_amount)    
-                    row['penality_int'] =montant_penality_int * -1 if montant_penality_int < 0 else montant_penality_int  
-      
+
     return data
 
-def data_base_query(offset):
+def data_base_query(offset,type):
        return f"""
-            SELECT  (SELECT opening_date FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id AND opening_date is not NULL LIMIT 1) as Date_pret, 
-            arrangement.product,arrangement.co_code,arrangement.id,arrangement.customer,  CONCAT(customer.short_name," " ,customer.name_1), count(arrangement_id) as echeance ,bill_detail.payment_date,
-            (bill_detail.or_prop_amount- bill_detail.os_prop_amount) as Capital, 
-            '' as principal_int,
-            '' as penality_int,
-            (bill_detail.payment_date+ (bill_detail.or_prop_amount- bill_detail.os_prop_amount)) as TOTAL,
-            bill_detail.property,
-            bill_detail.or_prop_amount,
-            bill_detail.os_prop_amount,
-            (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
-            (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
-            FROM aa_arrangement_mcbc_live_full as arrangement
-            INNER JOIN customer_mcbc_live_full_partie_1 as customer ON customer.id = arrangement.customer
-            INNER JOIN aa_bill_details_mcbc_live_full as bill_detail ON bill_detail.arrangement_id = arrangement.id
-            WHERE bill_detail.bill_status REGEXP 'SETTLED' AND NOT bill_detail.property REGEXP 'DISBURSEMENTFEE|NEWARRANGEMENTFEE'
-            AND bill_detail.property REGEXP 'ACCOUNT' AND  bill_detail.bill_date<='20241129'  AND bill_detail.os_prop_amount>=0 
-            GROUP BY arrangement.id  
-            HAVING date_pret is NOT NULL
-            ORDER BY echeance DESC
+           SELECT limit_cau.id,concat(customer.short_name,' ',customer.name_1) as Name,limit_cau.approval_date,limit_cau.expiry_date,limit_cau.internal_amount,limit_cau.total_os,limit_cau.avail_amt 
+            from limit_mcbc_live_full as limit_cau
+            INNER JOIN customer_mcbc_live_full_partie_1 as customer ON customer.id = limit_cau.liability_number
+            WHERE limit_product={type}  
              LIMIT 200 OFFSET {offset};    """
  
 def export_to_excel(data, file_name):
@@ -143,8 +80,19 @@ if __name__ == "__main__":
         "password": "",       # Replace with your database password
         "database": "dfe"             # Replace with your database name
     }
+    type_limit='2900'
+    type_text=''
+    
+    if type_limit=='2900': 
+        type_text ='Limit_Caution'
+        output_file_template = "./out_put_limit/out_put_"+type_text+"_{offset}.xlsx"
+    elif type_limit=='8400':
+        type_text='Limit_AVM_ESCOMPTE'
+        output_file_template = "./out_put_limit/out_put_"+type_text+"_{offset}.xlsx"
+    # elif type_limit=='300':
+    #     type_text='Limit_AVM_ESCOMPTE'
+    #     output_file_template = "./out_put_limit_avm_escompte/out_put_{type_text}_{offset}.xlsx"
      
-    output_file_template = "./out_put_etat_des_remboursement/etat_des_remboursement_{offset}.xlsx" 
     output_dir = os.path.dirname(output_file_template)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -153,8 +101,11 @@ if __name__ == "__main__":
     conn = connect_to_database(**db_config) 
     if conn:
         try:
-            for offset in range(0, 10000, 200): 
-                data = fetch_data_from_table(conn,  data_base_query(offset))
+            for offset in range(0, 1000, 200): 
+                # limit DAV 300
+                # limit Caution 2900
+                # limit AVM/ESCOMPTE 8400
+                data = fetch_data_from_table(conn,  data_base_query(offset,type_limit))
                 if data:
                     k=offset
                     print("Data fetched successfully in page =============> ", k+200," / 10000") 
