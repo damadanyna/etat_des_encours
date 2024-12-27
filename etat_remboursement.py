@@ -116,7 +116,7 @@ def data_base_query(offset):
             INNER JOIN customer_mcbc_live_full_partie_1 as customer ON customer.id = arrangement.customer
             INNER JOIN aa_bill_details_mcbc_live_full as bill_detail ON bill_detail.arrangement_id = arrangement.id
             WHERE bill_detail.bill_status REGEXP 'SETTLED' AND NOT bill_detail.property REGEXP 'DISBURSEMENTFEE|NEWARRANGEMENTFEE'
-            AND bill_detail.property REGEXP 'ACCOUNT' AND  bill_detail.bill_date<='20241223'  AND bill_detail.os_prop_amount>=0 
+            AND bill_detail.property REGEXP 'ACCOUNT' AND  bill_detail.bill_date<='20241227'  AND bill_detail.os_prop_amount>=0 
             GROUP BY arrangement.id  
             HAVING date_pret is NOT NULL
             ORDER BY echeance DESC
