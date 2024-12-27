@@ -114,20 +114,7 @@ def modify_column_data(data):
                 print(f" Montant_pret: {row['Montant_pret']}")
                 # print(row['Montant_pret'])
                 
-            # matching_indice_Appele_Non_verse = [
-            #     index for index, entry in enumerate(entries) 
-            #     if "CURACCOUNT" in entry  
-            # ] 
-            #     entries = [
-            # "CURACCOUNT", 
-            # "CURACCOUNT-20241123", 
-            # "CURACCOUNT-20241124", 
-            # "CURACCOUNT-20241125", 
-            # "CURACCOUNT-20241126", 
-            # "CURACCOUNT-20241127", 
-            # "CURACCOUNT-20241128",
-            # "CURACCOUNT-20241129", 
-            # ]
+       
             
             matching_indice_Appele_Non_verse=[]  
             # print('matching_indice_Appele_Non_verse here')
@@ -159,14 +146,9 @@ def modify_column_data(data):
                             open_balance = '0.0'  
                     montant_pert_total+= float(credit_mvmt)  
                     montant_pert_total+= float(debit_mvmt) 
-                    montant_pert_total+= float(open_balance) 
-                # if(row['Date_pret'] == '20241123'):
-                #     row['Capital_Non_appele_ech'] = montant_pert_total 
-                # else:
+                    montant_pert_total+= float(open_balance)  
                 row['Capital_Non_appele_ech'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
-                
-            # TERME A IGNORERJ  
-            # list_date=['20241123','20241124','20241125','20241126','20241127','20241128','20241129']
+                 
             indices_total_iterest_echus=[]
             for index, entry in enumerate(entries):    
                 if ("PA1PRINCIPALINT" in entry or "PA2PRINCIPALINT" in entry or "PA3PRINCIPALINT" in entry or "PA4PRINCIPALINT" in entry) and "SP" not in entry:  
@@ -183,21 +165,8 @@ def modify_column_data(data):
                             open_balance = '0.0'    
                     montant_pert_total+= float(open_balance)    
                 row['Total_interet_echus'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
-                    
-            # TERME A POUT TOTAL ACCOUT
-            # ignore_terms_total_iterest_echus = ("ACCPENALTYINT", "SP") 
-                    
-            # valid_entries = [
-            #     "CURACCOUNT", 
-            #     "CURACCOUNT-20241123", 
-            #     "CURACCOUNT-20241124", 
-            #     "CURACCOUNT-20241125", 
-            #     "CURACCOUNT-20241126", 
-            #     "CURACCOUNT-20241127", 
-            #     "CURACCOUNT-20241128", 
-            #     "CURACCOUNT-20241129"
-            # ]
-
+            
+     
             # Initialisation de la liste de résultats
             matching_indice_Non_appele_verse = []
 
@@ -328,7 +297,7 @@ def data_base_query(offset):
             '' as Montant_pret,
             (SELECT DATEDIFF(maturity_date, base_date)    FROM aa_account_details_mcbc_live_full   WHERE id = arrangement.id LIMIT 1) as Duree_Remboursement,
             (SELECT effective_rate  FROM aa_arr_interest_mcbc_live_full  WHERE id_comp_1 =arrangement.id  and id_comp_2='PRINCIPALINT' LIMIT 1) as taux_d_interet,  
-            (SELECT DATEDIFF('2024-12-23', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
+            (SELECT DATEDIFF('2024-12-27', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
             '' as Statut_du_client,
             '' as Capital_Non_appele_ech,
             '' as Capital_Appele_Non_verse, 
@@ -346,16 +315,15 @@ def data_base_query(offset):
             (SELECT curr_asset_type  FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
             (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
             (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223') as credit_mvmt_29_nov, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241223') as debit_mvmt_29_nov ,
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241227') as credit_mvmt_29_nov, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241227') as debit_mvmt_29_nov ,
             (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
             (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
         FROM 
             aa_arrangement_mcbc_live_full AS arrangement 
         WHERE 
             arrangement.product_line = 'LENDING'
-            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH') 
-            AND arrangement.linked_appl_id ='20000969417'   
+            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')  
             HAVING settle_status is not null
             LIMIT 200 OFFSET {offset}
         
