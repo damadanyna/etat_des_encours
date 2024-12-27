@@ -37,8 +37,11 @@ print(len(filtered_arr_dav_df))
 arr_dav_limit_df = pd.merge(arr_dav_df, limit_df, how='inner', left_on='reference', right_on='ACCOUNT')
 print(len(arr_dav_df))
 print(len(arr_dav_limit_df))
+# 8400
+# 2900
+# 300
 
-arr_dav_limit_df[arr_dav_limit_df['LIMIT.PRODUCT'] == '300']
+arr_dav_limit_df[arr_dav_limit_df['LIMIT.PRODUCT'] == '8400']
 
 len(arr_dav_limit_df)
 
