@@ -53,15 +53,15 @@ def modify_column_data(data):
         if input_string :
             entries = input_string.split('|')
             
-            indices_total_iterest_echus=[]
+            indices_principal_ind=[]
             for index, entry in enumerate(entries):
                 if entry =="PRINCIPALINT" :
-                    indices_total_iterest_echus.append(index) 
-                if not indices_total_iterest_echus:
+                    indices_principal_ind.append(index) 
+                if not indices_principal_ind:
                     row['principal_int']=0
                 else:
                     montant_principal_int=0
-                    for index in indices_total_iterest_echus:  
+                    for index in indices_principal_ind:  
                         or_prop_amount=0
                         if split_value(row['or_prop_amount'],index):  
                             or_prop_amount = split_value(row['or_prop_amount'],index)
@@ -75,15 +75,15 @@ def modify_column_data(data):
                         montant_principal_int+= float(os_prop_amount)    
                     row['principal_int'] =montant_principal_int * -1 if montant_principal_int < 0 else montant_principal_int  
             
-            indices_total_iterest_echus=[]
+            indices_total_penality_int=[]
             for index, entry in enumerate(entries):
                 if entry =="PENALTYINT" :
-                    indices_total_iterest_echus.append(index) 
-                if not indices_total_iterest_echus:
+                    indices_total_penality_int.append(index) 
+                if not indices_total_penality_int:
                     row['penality_int']=0
                 else:
                     montant_penality_int=0
-                    for index in indices_total_iterest_echus:  
+                    for index in indices_total_penality_int:  
                         or_prop_amount=0
                         if split_value(row['or_prop_amount'],index):  
                             or_prop_amount = split_value(row['or_prop_amount'],index)
@@ -96,6 +96,28 @@ def modify_column_data(data):
                         montant_penality_int+= float(or_prop_amount)    
                         montant_penality_int+= float(os_prop_amount)    
                     row['penality_int'] =montant_penality_int * -1 if montant_penality_int < 0 else montant_penality_int  
+                    
+            indices_total_capital=[]
+            for index, entry in enumerate(entries):
+                if entry =="ACCOUNT" :
+                    indices_total_capital.append(index) 
+                if not indices_total_capital:
+                    row['Capital']=0
+                else:
+                    montant_penality_int=0
+                    for index in indices_total_capital:  
+                        or_prop_amount=0
+                        if split_value(row['or_prop_amount'],index):  
+                            or_prop_amount = split_value(row['or_prop_amount'],index)
+                            if or_prop_amount.strip() == '' or or_prop_amount is None:
+                                or_prop_amount = '0.0'  
+                        if split_value(row['os_prop_amount'],index):  
+                            os_prop_amount = split_value(row['os_prop_amount'],index)
+                            if os_prop_amount.strip() == '' or os_prop_amount is None:
+                                os_prop_amount = '0.0'    
+                        montant_penality_int+= float(or_prop_amount)    
+                        montant_penality_int+= float(os_prop_amount)    
+                    row['Capital'] =montant_penality_int * -1 if montant_penality_int < 0 else montant_penality_int  
       
     return data
 
@@ -103,7 +125,7 @@ def data_base_query(offset):
        return f"""
             SELECT  (SELECT opening_date FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id AND opening_date is not NULL LIMIT 1) as Date_pret, 
             arrangement.product,arrangement.co_code,arrangement.id,arrangement.customer,  CONCAT(customer.short_name," " ,customer.name_1), count(arrangement_id) as echeance ,bill_detail.payment_date,
-            (bill_detail.or_prop_amount- bill_detail.os_prop_amount) as Capital, 
+            '' as Capital, 
             '' as principal_int,
             '' as penality_int,
             (bill_detail.payment_date+ (bill_detail.or_prop_amount- bill_detail.os_prop_amount)) as TOTAL,
@@ -115,8 +137,11 @@ def data_base_query(offset):
             FROM aa_arrangement_mcbc_live_full as arrangement
             INNER JOIN customer_mcbc_live_full_partie_1 as customer ON customer.id = arrangement.customer
             INNER JOIN aa_bill_details_mcbc_live_full as bill_detail ON bill_detail.arrangement_id = arrangement.id
-            WHERE bill_detail.bill_status REGEXP 'SETTLED' AND NOT bill_detail.property REGEXP 'DISBURSEMENTFEE|NEWARRANGEMENTFEE'
-            AND bill_detail.property REGEXP 'ACCOUNT' AND  bill_detail.bill_date<='20241223'  AND bill_detail.os_prop_amount>=0 
+            WHERE bill_detail.bill_status REGEXP 'SETTLED' 
+            AND NOT bill_detail.property REGEXP 'DISBURSEMENTFEE|NEWARRANGEMENTFEE'
+            AND bill_detail.property REGEXP 'ACCOUNT' 
+            AND  bill_detail.bill_date<='20241223'  
+            AND bill_detail.os_prop_amount>=0  
             GROUP BY arrangement.id  
             HAVING date_pret is NOT NULL
             ORDER BY echeance DESC
