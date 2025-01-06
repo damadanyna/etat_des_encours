@@ -41,7 +41,7 @@ print(len(arr_dav_limit_df))
 # 2900
 # 300
 
-arr_dav_limit_df[arr_dav_limit_df['LIMIT.PRODUCT'] == '8400']
+arr_dav_limit_df[arr_dav_limit_df['LIMIT.PRODUCT'] == '300']
 
 len(arr_dav_limit_df)
 

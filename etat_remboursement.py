@@ -140,7 +140,7 @@ def data_base_query(offset):
             WHERE bill_detail.bill_status REGEXP 'SETTLED' 
             AND NOT bill_detail.property REGEXP 'DISBURSEMENTFEE|NEWARRANGEMENTFEE'
             AND bill_detail.property REGEXP 'ACCOUNT' 
-            AND  bill_detail.bill_date<='20241223'  
+            AND  bill_detail.bill_date<='20241230'  
             AND bill_detail.os_prop_amount>=0  
             GROUP BY arrangement.id  
             HAVING date_pret is NOT NULL

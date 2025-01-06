@@ -271,7 +271,7 @@ def data_base_query(offset):
             '' as Montant_pret,
             (SELECT DATEDIFF(maturity_date, base_date)    FROM aa_account_details_mcbc_live_full   WHERE id = arrangement.id LIMIT 1) as Duree_Remboursement,
             (SELECT effective_rate  FROM aa_arr_interest_mcbc_live_full  WHERE id_comp_1 =arrangement.id  and id_comp_2='PRINCIPALINT' LIMIT 1) as taux_d_interet,  
-            (SELECT DATEDIFF('2024-12-26', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
+            (SELECT DATEDIFF('2024-12-31', payment_date)  FROM aa_bill_details_mcbc_live_full WHERE arrangement_id = arrangement.id ORDER BY payment_date ASC LIMIT 1 ) as Nombre_de_jour_retard,
             '' as Statut_du_client,
             '' as Capital_Non_appele_ech,
             '' as Capital_Appele_Non_verse, 
@@ -289,8 +289,8 @@ def data_base_query(offset):
             (SELECT curr_asset_type  FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
             (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
             (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
-            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241226') as credit_mvmt_29_nov, 
-            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241226') as debit_mvmt_29_nov ,
+            (SELECT credit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241230') as credit_mvmt_29_nov, 
+            (SELECT debit_mvmt FROM  eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id and last_ac_bal_upd='20241230') as debit_mvmt_29_nov ,
             (SELECT type_sysdate FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as type_sysdate,
             (SELECT open_balance FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as open_balance
         FROM 

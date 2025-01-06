@@ -80,7 +80,7 @@ if __name__ == "__main__":
         "password": "",       # Replace with your database password
         "database": "dfe"             # Replace with your database name
     }
-    type_limit='2900'
+    type_limit='8400'
     type_text=''
     
     if type_limit=='2900': 
