@@ -57,11 +57,11 @@ def modify_column_data(data):
         else:
             row['Nombre_de_jour_retard'] = 0 
                 
-        input_string = row['type_sysdate']
-        curr_asset_type = row['curr_asset_type']
+        input_string = row['curr_asset_type']
+        # curr_asset_type = row['curr_asset_type']
         if input_string or curr_asset_type: 
             entries = input_string.split('|')  
-            entries_curr_asset_type = curr_asset_type.split('|')  
+            # entries_curr_asset_type = curr_asset_type.split('|')  
             
             # TERME A IGNORER
             # ignore_terms = ("CURACCOUNT", "DUEACCOUNT", "ACCOUNT-") 
@@ -154,30 +154,32 @@ def modify_column_data(data):
                         open_balance = split_value(row['open_balance'],index)
                         if open_balance.strip() == '' or open_balance is None:
                             open_balance = '0.0'    
-                    montant_pert_total+= float(open_balance)    
+                    montant_pert_total+= safe_float(open_balance)   
                 row['Total_interet_echus'] =montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
             
      
             # Initialisation de la liste de résultats
-            matching_indice_Non_appele_verse = []
-
-            # Affichage des entrées 
-
-            # Boucle sur les entrées
+            matching_indice_Non_appele_verse = [] 
+            not_in_condition='false'
+            
             for index, entry in enumerate(entries):
                 if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412"): # Si l'entrée est dans la liste des entrées valides
                     continue  # Passer à l'itération suivante sans rien faire
-                else:
-                    if entry=="PA1ACCOUNT"  or entry=="PA2ACCOUNT"  or entry=="PA3ACCOUNT"  or entry=="PA4ACCOUNT" :
+                else: 
+                    if entry=="PA1ACCOUNT"  or entry=="PA2ACCOUNT"  or entry=="PA3ACCOUNT"  or entry=="PA4ACCOUNT" : 
                         matching_indice_Non_appele_verse.append(index) 
-                    elif ( entry!="PA1ACCOUNT"  or entry!="PA2ACCOUNT"  or entry!="PA3ACCOUNT"  or entry!="PA4ACCOUNT" ) and entry=="DUEACCOUNT":
+                    elif ( entry!="PA1ACCOUNT"  or entry!="PA2ACCOUNT"  or entry!="PA3ACCOUNT"  or entry!="PA4ACCOUNT" ) and entry=="DUEACCOUNT": 
                         matching_indice_Non_appele_verse.append(index) 
-                        
-            if not matching_indice_Non_appele_verse:
+                    else: 
+                        matching_indice_Non_appele_verse.append(index)
+                        not_in_condition='true'
+                    
+            
+            if not matching_indice_Non_appele_verse: 
                 row['Capital_Appele_Non_verse']=0
-            elif row['Nombre_de_jour_retard'] == 0:
+            elif row['Nombre_de_jour_retard'] == 0:  
                 row['Capital_Appele_Non_verse']=0
-            else:    
+            else:     
                 montant_pert_total=0 
                 for index in matching_indice_Non_appele_verse: 
                     debit_mvmt=0
@@ -195,13 +197,19 @@ def modify_column_data(data):
                     if split_value(row['open_balance'],index):
                         open_balance = split_value(row['open_balance'],index)
                         if open_balance.strip() == '' or open_balance is None:
-                            open_balance = '0.0'   
-                #     montant_pert_total+= float(debit_mvmt) 
-                #     montant_pert_total+= float(credit_mvmt) 
-                #     montant_pert_total+= float(open_balance)   
+                            open_balance = '0.0'  
+                    if not_in_condition=='true':  
+                        montant_pert_total += safe_float(debit_mvmt)
+                        montant_pert_total += safe_float(credit_mvmt)
+                        montant_pert_total += safe_float(open_balance) 
+                        value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total   
+                        row['Capital_Appele_Non_verse'] =value
+                        not_in_condition='false'
                  
+            
                 # value = montant_pert_total * -1 if montant_pert_total < 0 else montant_pert_total  
                 if (row['Produits'].startswith('AL.ESCO') and row['Nombre_de_jour_retard'] > 0):
+                    
                     row['Capital_Appele_Non_verse'] = float(open_balance)
                 else:
                     max_value = max(float(open_balance), float(credit_mvmt), float(debit_mvmt))
@@ -211,6 +219,7 @@ def modify_column_data(data):
                         # row['Capital_Appele_Non_verse'] = min_value  
                     else: 
                         row['Capital_Appele_Non_verse'] = max_value 
+                        
                 row['Capital_Appele_Non_verse'] =row['Capital_Appele_Non_verse']  * -1 if row['Capital_Appele_Non_verse']  < 0 else row['Capital_Appele_Non_verse'] 
             # test breack point
             # if (row['Numero_pret'] != 'AA243345BQV4' ): 
@@ -256,6 +265,12 @@ def modify_column_data(data):
         #     pass
     return data
 
+def safe_float(value):
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
 def data_base_query(offset):
        return f"""
            SELECT 
@@ -297,13 +312,14 @@ def data_base_query(offset):
             aa_arrangement_mcbc_live_full AS arrangement 
         WHERE 
             arrangement.product_line = 'LENDING'
-            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')  
+            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')   
             HAVING settle_status is not null
             LIMIT 200 OFFSET {offset}
         
             """
 
 
+            # AND arrangement.linked_appl_id ='20000648591' 
             # AND arrangement.linked_appl_id ='20000969417' 
             # AND arrangement.linked_appl_id ='20000349478' 
             # AND arrangement.linked_appl_id ='20000968537' 
