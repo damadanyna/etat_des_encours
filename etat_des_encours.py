@@ -363,7 +363,7 @@ def data_base_query(offset):
             aa_arrangement_mcbc_live_full AS arrangement 
         WHERE 
             arrangement.product_line = 'LENDING'
-            AND arrangement.arr_status IN ('CURRENT','EXPIRED','AUTH')  
+            AND arrangement.arr_status IN ('CURRENT','EXPIRED')  
             HAVING settle_status is not null
             LIMIT 200 OFFSET {offset}
         
