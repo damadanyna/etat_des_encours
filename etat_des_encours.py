@@ -49,11 +49,8 @@ def split_value_by_trailing(value, index, default=None):
 def modify_column_data(data):
     """Modify the 'contract_balance.open_balance' column to keep only the first value before the pipe (|)."""
     for row in data: 
-        # print ("Settle_status: ",row['settle_status'])
         if row['Nombre_de_jour_retard']:
             if  int(row['Nombre_de_jour_retard'])<0 :  
-                row['Nombre_de_jour_retard'] = 0
-            if row['settle_status']=='REPAID|UNPAID':
                 row['Nombre_de_jour_retard'] = 0
             else:
                 row['Nombre_de_jour_retard'] = int(row['Nombre_de_jour_retard'])
@@ -63,12 +60,7 @@ def modify_column_data(data):
         input_string = row['curr_asset_type']
         # curr_asset_type = row['curr_asset_type']
         if input_string or curr_asset_type: 
-            entries = input_string.split('|')   
-            # if any(entry in ["PA1ACCOUNT", "PA2ACCOUNT", "PA3ACCOUNT", "PA4ACCOUNT", "CURACCOUNT"] for entry in entries) and \
-            #     any(entry.startswith("DUEACCOUNT") or entry.startswith("CURACCOUNT-") for entry in entries):
-            #     # Si la condition est vraie, sauter à la prochaine itération de `for row in data`
-            #     continue
-            
+            entries = input_string.split('|')  
             # entries_curr_asset_type = curr_asset_type.split('|')  
             
             # TERME A IGNORER
@@ -359,29 +351,7 @@ def data_base_query(offset):
             (SELECT collateral_code FROM collateral_right_mcbc_live_full WHERE SUBSTRING(id, 1, LOCATE('.', id) - 1) = arrangement.customer LIMIT 1) as Code_Garantie,
             (SELECT alt_acct_id FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id LIMIT 1) as Numero_compte,  
             arrangement.arr_status, 
-           ( SELECT bill.settle_status 
-FROM aa_bill_details_mcbc_live_full AS bill
-WHERE bill.arrangement_id = arrangement.id
-  AND (
-    (bill.settle_status = 'UNPAID' 
-     AND bill.payment_date = (
-       SELECT MIN(b2.payment_date)
-       FROM aa_bill_details_mcbc_live_full AS b2
-       WHERE b2.arrangement_id = arrangement.id 
-         AND b2.settle_status = 'UNPAID'
-     )
-    )
-    OR
-    (bill.settle_status LIKE '%REPAID%' 
-     AND NOT EXISTS (
-       SELECT 1
-       FROM aa_bill_details_mcbc_live_full AS b3
-       WHERE b3.arrangement_id = arrangement.id 
-         AND b3.settle_status = 'UNPAID'
-     )
-    )
-  )
-ORDER BY bill.payment_date ASC LIMIT 1 ) as settle_status,
+            (SELECT settle_status FROM aa_bill_details_mcbc_live_full WHERE settle_status = 'UNPAID' LIMIT 1) as settle_status,
             (SELECT curr_asset_type FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id LIMIT 1) as curr_asset_type,
             (SELECT credit_mvmt FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as credit_mvmt, 
             (SELECT debit_mvmt FROM eb_cont_bal_mcbc_live_full WHERE id = arrangement.linked_appl_id) as debit_mvmt, 
@@ -400,9 +370,6 @@ ORDER BY bill.payment_date ASC LIMIT 1 ) as settle_status,
             """
 
    
-            # AND arrangement.linked_appl_id ='20000365597' 
-            # (SELECT settle_status FROM aa_bill_details_mcbc_live_full WHERE settle_status like '%UNPAID%'   and arrangement_id=arrangement.id ORDER by payment_date ASC LIMIT 1) as settle_status,
-            # AND arrangement.linked_appl_id ='20001328857' 
             # AND arrangement.linked_appl_id ='20000301338' 
             # AND arrangement.linked_appl_id ='20000968887'  
             # AND arrangement.linked_appl_id ='20000957403' 
