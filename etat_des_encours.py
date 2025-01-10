@@ -282,27 +282,32 @@ def modify_column_data(data):
             # TERME A POUT TOTAL ACCOUT
             valeur_retard = row.get('Nombre_de_jour_retard', '')
 
-            if isinstance(valeur_retard, str):  # Si c'est une chaîne, nettoyez-la
-                valeur_retard = valeur_retard.strip()
+            # if isinstance(valeur_retard, str):  # Si c'est une chaîne, nettoyez-la
+            #     valeur_retard = valeur_retard.strip()
 
-            # Vérifier si la valeur est convertible en entier
-            try:
-                retard = int(valeur_retard)  # Convertit la valeur en entier
-                # Appliquez les conditions
-                if 0 < retard <= 30:
-                    row['Statut_du_client'] = 'PA1'
-                    row['Statut_du_client'] = 'PA1'
-                elif 30 < retard <= 60:
-                    row['Statut_du_client'] = 'PA2'
-                elif 60 < retard <= 90:
-                    row['Statut_du_client'] = 'PA3'
-                elif retard > 90:
-                    row['Statut_du_client'] = 'PA4'
-                else:
-                    row['Statut_du_client'] = ''  # Optionnel pour les cas inattendus
-            except (ValueError, TypeError):  # Gérer les cas où la conversion échoue
-                row['Statut_du_client'] = ''
-            # Gestion des cas invalides ou valides
+            # # Vérifier si la valeur est convertible en entier
+            # try:
+            #     retard = int(valeur_retard)  # Convertit la valeur en entier
+            #     # Appliquez les conditions
+            #     if 0 < retard <= 30:
+            #         row['Statut_du_client'] = 'PA1'
+            #         row['Statut_du_client'] = 'PA1'
+            #     elif 30 < retard <= 60:
+            #         row['Statut_du_client'] = 'PA2'
+            #     elif 60 < retard <= 90:
+            #         row['Statut_du_client'] = 'PA3'
+            #     elif retard > 90:
+            #         row['Statut_du_client'] = 'PA4'
+            #     else:
+            #         row['Statut_du_client'] = ''  # Optionnel pour les cas inattendus
+            # except (ValueError, TypeError):  # Gérer les cas où la conversion échoue
+            #     row['Statut_du_client'] = ''
+            # # Gestion des cas invalides ou valides
+            row['Statut_du_client'] = row['all_age_status']
+            # print(f"Statut_du_client: {row['Statut_du_client']}")
+            if  row['Statut_du_client']==None:
+                row['Nombre_de_jour_retard'] = ''
+            
    
              
         capital_appele =row['Capital_Appele_Non_verse']
@@ -349,6 +354,7 @@ def data_base_query(offset):
             ( SELECT account_officer FROM customer_mcbc_live_full_partie_1 AS customer  
             WHERE FIND_IN_SET(customer.id, REPLACE(arrangement.customer, '|', ',')) LIMIT 1) AS Agent_de_gestion,
             (SELECT collateral_code FROM collateral_right_mcbc_live_full WHERE SUBSTRING(id, 1, LOCATE('.', id) - 1) = arrangement.customer LIMIT 1) as Code_Garantie,
+            (SELECT all_age_status FROM aa_account_details_mcbc_live_full WHERE id = arrangement.id LIMIT 1) as all_age_status,
             (SELECT alt_acct_id FROM account_mcbc_live_full WHERE id= arrangement.linked_appl_id LIMIT 1) as Numero_compte,  
             arrangement.arr_status, 
             (SELECT settle_status FROM aa_bill_details_mcbc_live_full WHERE settle_status = 'UNPAID' LIMIT 1) as settle_status,
