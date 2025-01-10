@@ -8,6 +8,8 @@ I--- IMPORTATION DU FICHIER EXCEL VERS LA BASE DE DONNEE
     c-- Copier tout les fichier dans le repertoir de l'application "..\project_2024\etat_des_encours\input\"
     d-- lancer le script dans le terminal "pyhton generate_table.py"
 
+    Note: table  Customer1 doit demander à Marianne de le fournir 
+
 
 
 
